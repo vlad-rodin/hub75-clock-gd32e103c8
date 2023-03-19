@@ -91,7 +91,7 @@ clean:
 	@rm -rf ${BUILD_DIR}
 	@echo -en "${STYLE_OFF}"
 
-OPENOCD_CFG := -f "interface/stlink.cfg" -f "target/${FAMILY}.cfg"
+OPENOCD_CFG := -f "interface/stlink.cfg" -f "${FAMILY}.cfg"
 OPENOCD_BGN := -c "reset_config srst_only connect_assert_srst" -c "init" -c "reset halt"
 OPENOCD_END := -c "reset run" -c "exit"
 
