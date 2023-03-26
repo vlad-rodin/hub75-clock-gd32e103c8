@@ -20,9 +20,9 @@ typedef struct
 } DMA_TypeDef;
 
 /* DMA definitions */
-#define DMA                     ((DMA_TypeDef **) DMA_BASE)              /*!< DMA base address array */
-#define DMA0                    (DMA[0])                                 /*!< DMA0 base address */
-#define DMA1                    (DMA[1])                                 /*!< DMA1 base address */
+#define DMA                     ((DMA_TypeDef *) DMA_BASE)               /*!< DMA base address array */
+#define DMA0                    (&DMA[0])                                /*!< DMA0 base address */
+#define DMA1                    (&DMA[1])                                /*!< DMA1 base address */
 
 /* bits definitions */
 /* DMA_INTF */
