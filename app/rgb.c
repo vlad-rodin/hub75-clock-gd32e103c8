@@ -3,9 +3,14 @@
 static const double GAMMA = 2.2;
 static const uint32_t CLK_PERIOD = 10;
 static DMA_Channel_TypeDef *const DAT_DMA_CHANNEL = (&(DMA[0].CH[2]));
-static DMA_Channel_TypeDef *const ADR_DMA_CHANNEL = (&(DMA[0].CH[4]));
+static DMA_Channel_TypeDef *const ADR_DMA_CHANNEL = (&(DMA[0].CH[1]));
 static TIMER_TypeDef *const CLK_TIMER = TIMER2;
 static TIMER_TypeDef *const LAT_TIMER = TIMER0;
+
+static const uint32_t ADR_OFFSET = CLK_PERIOD*(CLM_MAX + 0);
+static const uint32_t LAT_OFFSET = CLK_PERIOD*(CLM_MAX + 1);
+static const uint32_t ENB_OFFSET = LAT_OFFSET + 2;
+static const uint32_t MIN_PERIOD = CLK_PERIOD*(CLM_MAX + 2);
 
 static uint8_t Address[8];
 static uint8_t Correction[256];
@@ -17,8 +22,10 @@ void rgb_init()
 	rgb_free();
 
 	/* Test */
-	Display[0][0][0] = 0x00;
-	Display[0][0][2] = 0x00;
+	Display[0][0][0] = 0x3E;
+	Display[0][0][1] = 0x3D;
+	Display[0][0][2] = 0x3B;
+	Display[0][7][31] = 0x07;
 
 	/* Fill the address array */
 	for (uint_fast8_t i = 0; i < sizeof(Address); i++)
@@ -27,7 +34,7 @@ void rgb_init()
 	}
 
 	/* Fill the correction array */
-	for (uint_fast16_t i = 0; i < 256; i++)
+	for (uint_fast16_t i = 0; i < sizeof(Correction); i++)
 	{
 		Correction[i] = round(255*pow((double)i/255, GAMMA));
 	}
@@ -93,23 +100,28 @@ void rgb_init()
 		;
 
 	/* Initialize the enable and latch timer */
-	LAT_TIMER->CTL1     = (0x4UL << TIMER_CTL1_MMC_Pos); // master mode control: compare source is from O0CPRE
-	LAT_TIMER->DMAINTEN = TIMER_DMAINTEN_UPDEN;   // enable update DMA request
+	LAT_TIMER->CTL1     = (0x6UL << TIMER_CTL1_MMC_Pos); // master mode control: compare source is from O2CPRE
+	LAT_TIMER->DMAINTEN = TIMER_DMAINTEN_CH0DEN;         // enable channel 0 capture/compare DMA request
 	LAT_TIMER->CHCTL0   = 0
 		| (0x6UL << TIMER_CHCTL0_CH0COMCTL_Pos) // PWM mode0 on channel 0
-		| (0x6UL << TIMER_CHCTL0_CH1COMCTL_Pos) // PWM mode0 on channel 1
+		| (0x7UL << TIMER_CHCTL0_CH1COMCTL_Pos) // PWM mode0 on channel 1
 		;
 	LAT_TIMER->CHCTL1   = (0x6UL << TIMER_CHCTL0_CH0COMCTL_Pos); // PWM mode0 on channel 2
 	LAT_TIMER->CHCTL2   = 0
-		| TIMER_CHCTL2_CH2NEN // enable channel 2 function
-		| TIMER_CHCTL2_CH1NEN // enable channel 1 function
+		| TIMER_CHCTL2_CH2NEN // enable channel 2 complementary output
+		| TIMER_CHCTL2_CH1NP  // channel 1 complementary output low level is active level
+		| TIMER_CHCTL2_CH1NEN // enable channel 1 complementary output
+		| TIMER_CHCTL2_CH1EN  // enable channel 1 function
 		;
 	LAT_TIMER->CNT      = TIMER_CNT_CNT;
-	LAT_TIMER->CAR      = CLK_PERIOD*(CLM_MAX + 4) - 1;
-	LAT_TIMER->CH0CV    = CLK_PERIOD*(CLM_MAX + 1);
-	LAT_TIMER->CH1CV    = CLK_PERIOD*(CLM_MAX + 1);
-	LAT_TIMER->CH2CV    = CLK_PERIOD*(CLM_MAX + 3);
-	LAT_TIMER->CCHP     = TIMER_CCHP_POEN; // primary output enable
+	LAT_TIMER->CAR      = MIN_PERIOD - 1;
+	LAT_TIMER->CH0CV    = ADR_OFFSET;
+	LAT_TIMER->CH1CV    = ENB_OFFSET;
+	LAT_TIMER->CH2CV    = LAT_OFFSET;
+	LAT_TIMER->CCHP     = 0
+		| TIMER_CCHP_POEN // primary output enable
+		| ((0b11000000UL | (ADR_OFFSET/8 - 32)) << TIMER_CCHP_DTCFG_Pos)
+		;
 	LAT_TIMER->SWEVG    = TIMER_SWEVG_UPG; // generate an update event
 
 	/* Initialize the clock timer */
