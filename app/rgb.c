@@ -3,6 +3,7 @@
 static const double GAMMA = 2.2;
 static const uint32_t CLK_PERIOD = 10;
 static DMA_Channel_TypeDef *const DAT_DMA_CHANNEL = (&(DMA[0].CH[2]));
+static DMA_Channel_TypeDef *const ADR_DMA_CHANNEL = (&(DMA[0].CH[4]));
 static TIMER_TypeDef *const CLK_TIMER = TIMER2;
 static TIMER_TypeDef *const LAT_TIMER = TIMER0;
 
@@ -22,7 +23,7 @@ void rgb_init()
 	/* Fill the address array */
 	for (uint_fast8_t i = 0; i < sizeof(Address); i++)
 	{
-		Address[i] = i;
+		Address[i] = ~i;
 	}
 
 	/* Fill the correction array */
@@ -53,7 +54,7 @@ void rgb_init()
 	/* Initialize the clock pin as TIMER2_CH0 */
 	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_MAX, GPIO_PIN_6);
 
-	/* Initialize DMA */
+	/* Initialize the data DMA */
 	DAT_DMA_CHANNEL->CNT   = sizeof(Display);
 	DAT_DMA_CHANNEL->PADDR = (uint32_t)&(GPIO_OCTL(GPIOA));
 	DAT_DMA_CHANNEL->MADDR = (uint32_t)Display;
@@ -72,9 +73,28 @@ void rgb_init()
 		| DMA_CHxCTL_CHEN                  // enable channel
 		;
 
+	/* Initialize the address DMA */
+	ADR_DMA_CHANNEL->CNT   = sizeof(Address);
+	ADR_DMA_CHANNEL->PADDR = (uint32_t)&(GPIO_OCTL(GPIOB)) + 2UL;
+	ADR_DMA_CHANNEL->MADDR = (uint32_t)Address;
+	ADR_DMA_CHANNEL->CTL   = 0
+		| (0x0UL << DMA_CHxCTL_M2M_Pos)    // disable memory to memory mode
+		| (0x0UL << DMA_CHxCTL_PRIO_Pos)   // low priority level
+		| (0x0UL << DMA_CHxCTL_MWIDTH_Pos) // transfer data size of memory: 8-bit
+		| (0x0UL << DMA_CHxCTL_PWIDTH_Pos) // transfer data size of peripheral: 8-bit
+		| DMA_CHxCTL_MNAGA                 // increasing memory address mode
+		| (0x0UL << DMA_CHxCTL_PNAGA_Pos)  // fixed peripheral address mode
+		| DMA_CHxCTL_CMEN                  // enable circular mode
+		| DMA_CHxCTL_DIR                   // read from memory and write to peripheral
+		| (0x0UL << DMA_CHxCTL_ERRIE_Pos)  // disable the channel error interrupt
+		| (0x0UL << DMA_CHxCTL_HTFIE_Pos)  // disable channel half transfer finish interrupt
+		| (0x0UL << DMA_CHxCTL_FTFIE_Pos)  // disable channel full transfer finish interrupt
+		| DMA_CHxCTL_CHEN                  // enable channel
+		;
+
 	/* Initialize the enable and latch timer */
-	LAT_TIMER->CNT      = TIMER_CNT_CNT;
 	LAT_TIMER->CTL1     = (0x4UL << TIMER_CTL1_MMC_Pos); // master mode control: compare source is from O0CPRE
+	LAT_TIMER->DMAINTEN = TIMER_DMAINTEN_UPDEN;   // enable update DMA request
 	LAT_TIMER->CHCTL0   = 0
 		| (0x6UL << TIMER_CHCTL0_CH0COMCTL_Pos) // PWM mode0 on channel 0
 		| (0x6UL << TIMER_CHCTL0_CH1COMCTL_Pos) // PWM mode0 on channel 1
@@ -84,18 +104,19 @@ void rgb_init()
 		| TIMER_CHCTL2_CH2NEN // enable channel 2 function
 		| TIMER_CHCTL2_CH1NEN // enable channel 1 function
 		;
+	LAT_TIMER->CNT      = TIMER_CNT_CNT;
 	LAT_TIMER->CAR      = CLK_PERIOD*(CLM_MAX + 4) - 1;
 	LAT_TIMER->CH0CV    = CLK_PERIOD*(CLM_MAX + 1);
 	LAT_TIMER->CH1CV    = CLK_PERIOD*(CLM_MAX + 1);
 	LAT_TIMER->CH2CV    = CLK_PERIOD*(CLM_MAX + 3);
 	LAT_TIMER->CCHP     = TIMER_CCHP_POEN; // primary output enable
+	LAT_TIMER->SWEVG    = TIMER_SWEVG_UPG; // generate an update event
 
 	/* Initialize the clock timer */
 	CLK_TIMER->DMAINTEN = TIMER_DMAINTEN_UPDEN;   // enable update DMA request
 	CLK_TIMER->CHCTL0   = TIMER_CHCTL0_CH0COMCTL; // PWM mode1 on channel 0
 	CLK_TIMER->CHCTL2   = TIMER_CHCTL2_CH0EN;     // enable channel 0 function
 	CLK_TIMER->SMCFG    = 0
-		// | TIMER_SMCFG_MSM // enable master-slave mode
 		| (0x0UL << TIMER_SMCFG_TRGS_Pos) // trigger selection: ITI0 (TIMER0_TRGO)
 		| (0x5UL << TIMER_SMCFG_SMC_Pos)  // pause mode
 		;
