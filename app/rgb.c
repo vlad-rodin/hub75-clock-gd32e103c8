@@ -2,21 +2,25 @@
 
 static const double GAMMA = 2.2;
 static const uint32_t CLK_PERIOD = 8;
+
+static DMA_Channel_TypeDef *const DUR_DMA_CHANNEL = (&(DMA[0].CH[4]));
 static DMA_Channel_TypeDef *const DAT_DMA_CHANNEL = (&(DMA[0].CH[2]));
-static DMA_Channel_TypeDef *const ADR_DMA_CHANNEL = (&(DMA[0].CH[3]));
+static DMA_Channel_TypeDef *const ADR_DMA_CHANNEL = (&(DMA[0].CH[1]));
 static TIMER_TypeDef *const CLK_TIMER = TIMER2;
-static TIMER_TypeDef *const LAT_TIMER = TIMER0;
+static TIMER_TypeDef *const MST_TIMER = TIMER0;
 
-static const uint32_t MIN_PERIOD = CLK_PERIOD*(CLM_MAX + 3);
 static const uint32_t DAT_TIME = CLK_PERIOD*(CLM_MAX + 1);
-static const uint32_t ADR_LOAD = CLK_PERIOD*(CLM_MAX + 2) - 3;
-static const uint32_t LAT_RISE = MIN_PERIOD - 3;
-static const uint32_t ENB_RISE = ADR_LOAD + 3;
-static const uint32_t ENB_FALL = LAT_RISE + 1;
+static const uint32_t ENB_RISE = DAT_TIME + 4;
+static const uint32_t ENB_FALL = ENB_RISE + 6;
+static const uint32_t LAT_RISE = (ENB_FALL + ENB_RISE)/2;
 
-static uint8_t Address[8];
-static uint8_t Correction[256];
-static uint8_t Display[1][sizeof(Address)][CLM_MAX + 1];
+static const uint32_t DIS_TIME = ENB_FALL - ENB_RISE;
+static const uint32_t ENB_TIME = CLK_PERIOD*(CLM_MAX + 3) - DIS_TIME;
+
+static uint16_t Duration[8];
+static uint8_t  Address[8];
+static uint8_t  Correction[256];
+static uint8_t  Display[sizeof(Duration)/sizeof(Duration[0])][sizeof(Address)/sizeof(Address[0])][CLM_MAX + 1];
 
 // Initialization
 void rgb_init()
@@ -28,15 +32,25 @@ void rgb_init()
 	Display[0][0][1] = 0x3D;
 	Display[0][0][2] = 0x3B;
 	Display[0][7][31] = 0x07;
+	for (uint_fast8_t i = 0; i < sizeof(Duration)/sizeof(Duration[0]); i++)
+	{
+		Display[i][2][15] = 0x07;
+	}
+
+	/* Fill the duration array */
+	for (uint_fast8_t i = 0; i < sizeof(Duration)/sizeof(Duration[0]); i++)
+	{
+		Duration[i] = (ENB_TIME << i) + DIS_TIME - 1;
+	}
 
 	/* Fill the address array */
-	for (uint_fast8_t i = 0; i < sizeof(Address); i++)
+	for (uint_fast8_t i = 0; i < sizeof(Address)/sizeof(Address[0]); i++)
 	{
 		Address[i] = ~i;
 	}
 
 	/* Fill the correction array */
-	for (uint_fast16_t i = 0; i < sizeof(Correction); i++)
+	for (uint_fast16_t i = 0; i < sizeof(Correction)/sizeof(Correction[0]); i++)
 	{
 		Correction[i] = round(255*pow((double)i/255, GAMMA));
 	}
@@ -83,12 +97,12 @@ void rgb_init()
 		;
 
 	/* Initialize the address DMA */
-	ADR_DMA_CHANNEL->CNT   = sizeof(Address);
+	ADR_DMA_CHANNEL->CNT   = sizeof(Address)/sizeof(Address[0]);
 	ADR_DMA_CHANNEL->PADDR = (uint32_t)&(GPIO_OCTL(GPIOB)) + 2UL;
 	ADR_DMA_CHANNEL->MADDR = (uint32_t)Address;
 	ADR_DMA_CHANNEL->CTL   = 0
 		| (0x0UL << DMA_CHxCTL_M2M_Pos)    // disable memory to memory mode
-		| (0x0UL << DMA_CHxCTL_PRIO_Pos)   // low priority level
+		| (0x1UL << DMA_CHxCTL_PRIO_Pos)   // medium priority level
 		| (0x0UL << DMA_CHxCTL_MWIDTH_Pos) // transfer data size of memory: 8-bit
 		| (0x0UL << DMA_CHxCTL_PWIDTH_Pos) // transfer data size of peripheral: 8-bit
 		| DMA_CHxCTL_MNAGA                 // increasing memory address mode
@@ -101,28 +115,50 @@ void rgb_init()
 		| DMA_CHxCTL_CHEN                  // enable channel
 		;
 
-	/* Initialize the enable and latch timer */
-	LAT_TIMER->CTL0     = (0x2UL << TIMER_CTL0_CKDIV_Pos); // f_DTS = f_CK_TIMER / 4
-	LAT_TIMER->CTL1     = (0x4UL << TIMER_CTL1_MMC_Pos);   // master mode control: compare source is from O0CPRE
-	LAT_TIMER->DMAINTEN = TIMER_DMAINTEN_CH3DEN;           // enable channel 3 capture/compare DMA request
-	LAT_TIMER->CHCTL0   = 0
+	/* Initialize the duration DMA */
+	DUR_DMA_CHANNEL->CNT   = sizeof(Duration)/sizeof(Duration[0]);
+	DUR_DMA_CHANNEL->PADDR = (uint32_t)&(MST_TIMER->CAR);
+	DUR_DMA_CHANNEL->MADDR = (uint32_t)Duration;
+	DUR_DMA_CHANNEL->CTL   = 0
+		| (0x0UL << DMA_CHxCTL_M2M_Pos)    // disable memory to memory mode
+		| (0x0UL << DMA_CHxCTL_PRIO_Pos)   // low priority level
+		| (0x1UL << DMA_CHxCTL_MWIDTH_Pos) // transfer data size of memory: 16-bit
+		| (0x1UL << DMA_CHxCTL_PWIDTH_Pos) // transfer data size of peripheral: 16-bit
+		| DMA_CHxCTL_MNAGA                 // increasing memory address mode
+		| (0x0UL << DMA_CHxCTL_PNAGA_Pos)  // fixed peripheral address mode
+		| DMA_CHxCTL_CMEN                  // enable circular mode
+		| DMA_CHxCTL_DIR                   // read from memory and write to peripheral
+		| (0x0UL << DMA_CHxCTL_ERRIE_Pos)  // disable the channel error interrupt
+		| (0x0UL << DMA_CHxCTL_HTFIE_Pos)  // disable channel half transfer finish interrupt
+		| (0x0UL << DMA_CHxCTL_FTFIE_Pos)  // disable channel full transfer finish interrupt
+		| DMA_CHxCTL_CHEN                  // enable channel
+		;
+
+	/* Initialize the master timer */
+	MST_TIMER->CTL0     = (0x2UL << TIMER_CTL0_CKDIV_Pos); // f_DTS = f_CK_TIMER / 4
+	MST_TIMER->CTL1     = (0x4UL << TIMER_CTL1_MMC_Pos);   // master mode control: compare source is from O0CPRE
+	MST_TIMER->DMAINTEN = 0
+		| TIMER_DMAINTEN_CH0DEN // enable channel 0 capture/compare DMA request
+		| TIMER_DMAINTEN_UPDEN  // enable update DMA request
+		;
+	MST_TIMER->CHCTL0   = 0
 		| (0x6UL << TIMER_CHCTL0_CH0COMCTL_Pos) // PWM mode0 on channel 0
 		| (0x7UL << TIMER_CHCTL0_CH1COMCTL_Pos) // PWM mode0 on channel 1
 		;
-	LAT_TIMER->CHCTL1   = (0x6UL << TIMER_CHCTL0_CH0COMCTL_Pos); // PWM mode0 on channel 2
-	LAT_TIMER->CHCTL2   = 0
+	MST_TIMER->CHCTL1   = (0x6UL << TIMER_CHCTL0_CH0COMCTL_Pos); // PWM mode0 on channel 2
+	MST_TIMER->CHCTL2   = 0
 		| TIMER_CHCTL2_CH2NEN // enable channel 2 complementary output
 		| TIMER_CHCTL2_CH1NP  // channel 1 complementary output low level is active level
 		| TIMER_CHCTL2_CH1NEN // enable channel 1 complementary output
 		| TIMER_CHCTL2_CH1EN  // enable channel 1 function
 		;
-	LAT_TIMER->CNT      = LAT_RISE;
-	LAT_TIMER->CAR      = MIN_PERIOD - 1;
-	LAT_TIMER->CH0CV    = DAT_TIME;
-	LAT_TIMER->CH1CV    = ENB_FALL;
-	LAT_TIMER->CH2CV    = LAT_RISE;
-	LAT_TIMER->CH3CV    = ADR_LOAD;
-	LAT_TIMER->CCHP     = 0
+	MST_TIMER->CNT      = LAT_RISE;
+	MST_TIMER->CAR      = Duration[0];
+	MST_TIMER->CREP     = sizeof(Address)/sizeof(Address[0]) - 1;
+	MST_TIMER->CH0CV    = DAT_TIME;
+	MST_TIMER->CH1CV    = ENB_FALL;
+	MST_TIMER->CH2CV    = LAT_RISE;
+	MST_TIMER->CCHP     = 0
 		| TIMER_CCHP_POEN // primary output enable
 		| ((ENB_RISE/4) << TIMER_CCHP_DTCFG_Pos)
 		;
@@ -135,16 +171,15 @@ void rgb_init()
 	CLK_TIMER->DMAINTEN = TIMER_DMAINTEN_CH3DEN;  // enable channel 3 capture/compare DMA request
 	CLK_TIMER->CHCTL0   = TIMER_CHCTL0_CH0COMCTL; // PWM mode1 on channel 0
 	CLK_TIMER->CHCTL2   = TIMER_CHCTL2_CH0EN;     // enable channel 0 function
-	CLK_TIMER->CNT      = 1;
 	CLK_TIMER->CAR      = CLK_PERIOD - 1;
 	CLK_TIMER->CH0CV    = CLK_PERIOD/2;
-	CLK_TIMER->CH3CV    = CLK_PERIOD - 3;
+	CLK_TIMER->CH3CV    = CLK_PERIOD - 1;
 	CLK_TIMER->CCHP     = TIMER_CCHP_POEN;  // primary output enable
 	CLK_TIMER->SWEVG    = TIMER_SWEVG_CH3G; // generate a channel 3 capture or compare event
 	CLK_TIMER->CTL0     = TIMER_CTL0_CEN;   // enable counter
 
 	/* Run process */
-	LAT_TIMER->CTL0    |= TIMER_CTL0_CEN;  // enable counter
+	MST_TIMER->CTL0 |= TIMER_CTL0_CEN; // enable counter
 }
 
 // Clear screen
