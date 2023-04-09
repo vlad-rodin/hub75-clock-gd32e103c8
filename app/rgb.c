@@ -1,16 +1,18 @@
 #include "rgb.h"
 
 static const double GAMMA = 2.2;
-static const uint32_t CLK_PERIOD = 10;
+static const uint32_t CLK_PERIOD = 8;
 static DMA_Channel_TypeDef *const DAT_DMA_CHANNEL = (&(DMA[0].CH[2]));
-static DMA_Channel_TypeDef *const ADR_DMA_CHANNEL = (&(DMA[0].CH[1]));
+static DMA_Channel_TypeDef *const ADR_DMA_CHANNEL = (&(DMA[0].CH[3]));
 static TIMER_TypeDef *const CLK_TIMER = TIMER2;
 static TIMER_TypeDef *const LAT_TIMER = TIMER0;
 
-static const uint32_t ADR_OFFSET = CLK_PERIOD*(CLM_MAX + 0);
-static const uint32_t LAT_OFFSET = CLK_PERIOD*(CLM_MAX + 1);
-static const uint32_t ENB_OFFSET = LAT_OFFSET + 2;
-static const uint32_t MIN_PERIOD = CLK_PERIOD*(CLM_MAX + 2);
+static const uint32_t MIN_PERIOD = CLK_PERIOD*(CLM_MAX + 3);
+static const uint32_t DAT_TIME = CLK_PERIOD*(CLM_MAX + 1);
+static const uint32_t ADR_LOAD = CLK_PERIOD*(CLM_MAX + 2) - 3;
+static const uint32_t LAT_RISE = MIN_PERIOD - 3;
+static const uint32_t ENB_RISE = ADR_LOAD + 3;
+static const uint32_t ENB_FALL = LAT_RISE + 1;
 
 static uint8_t Address[8];
 static uint8_t Correction[256];
@@ -100,8 +102,9 @@ void rgb_init()
 		;
 
 	/* Initialize the enable and latch timer */
-	LAT_TIMER->CTL1     = (0x6UL << TIMER_CTL1_MMC_Pos); // master mode control: compare source is from O2CPRE
-	LAT_TIMER->DMAINTEN = TIMER_DMAINTEN_CH0DEN;         // enable channel 0 capture/compare DMA request
+	LAT_TIMER->CTL0     = (0x2UL << TIMER_CTL0_CKDIV_Pos); // f_DTS = f_CK_TIMER / 4
+	LAT_TIMER->CTL1     = (0x4UL << TIMER_CTL1_MMC_Pos);   // master mode control: compare source is from O0CPRE
+	LAT_TIMER->DMAINTEN = TIMER_DMAINTEN_CH3DEN;           // enable channel 3 capture/compare DMA request
 	LAT_TIMER->CHCTL0   = 0
 		| (0x6UL << TIMER_CHCTL0_CH0COMCTL_Pos) // PWM mode0 on channel 0
 		| (0x7UL << TIMER_CHCTL0_CH1COMCTL_Pos) // PWM mode0 on channel 1
@@ -113,33 +116,35 @@ void rgb_init()
 		| TIMER_CHCTL2_CH1NEN // enable channel 1 complementary output
 		| TIMER_CHCTL2_CH1EN  // enable channel 1 function
 		;
-	LAT_TIMER->CNT      = TIMER_CNT_CNT;
+	LAT_TIMER->CNT      = LAT_RISE;
 	LAT_TIMER->CAR      = MIN_PERIOD - 1;
-	LAT_TIMER->CH0CV    = ADR_OFFSET;
-	LAT_TIMER->CH1CV    = ENB_OFFSET;
-	LAT_TIMER->CH2CV    = LAT_OFFSET;
+	LAT_TIMER->CH0CV    = DAT_TIME;
+	LAT_TIMER->CH1CV    = ENB_FALL;
+	LAT_TIMER->CH2CV    = LAT_RISE;
+	LAT_TIMER->CH3CV    = ADR_LOAD;
 	LAT_TIMER->CCHP     = 0
 		| TIMER_CCHP_POEN // primary output enable
-		| ((0b11000000UL | (ADR_OFFSET/8 - 32)) << TIMER_CCHP_DTCFG_Pos)
+		| ((ENB_RISE/4) << TIMER_CCHP_DTCFG_Pos)
 		;
-	LAT_TIMER->SWEVG    = TIMER_SWEVG_UPG; // generate an update event
 
 	/* Initialize the clock timer */
-	CLK_TIMER->DMAINTEN = TIMER_DMAINTEN_UPDEN;   // enable update DMA request
-	CLK_TIMER->CHCTL0   = TIMER_CHCTL0_CH0COMCTL; // PWM mode1 on channel 0
-	CLK_TIMER->CHCTL2   = TIMER_CHCTL2_CH0EN;     // enable channel 0 function
 	CLK_TIMER->SMCFG    = 0
 		| (0x0UL << TIMER_SMCFG_TRGS_Pos) // trigger selection: ITI0 (TIMER0_TRGO)
 		| (0x5UL << TIMER_SMCFG_SMC_Pos)  // pause mode
 		;
+	CLK_TIMER->DMAINTEN = TIMER_DMAINTEN_CH3DEN;  // enable channel 3 capture/compare DMA request
+	CLK_TIMER->CHCTL0   = TIMER_CHCTL0_CH0COMCTL; // PWM mode1 on channel 0
+	CLK_TIMER->CHCTL2   = TIMER_CHCTL2_CH0EN;     // enable channel 0 function
+	CLK_TIMER->CNT      = 1;
 	CLK_TIMER->CAR      = CLK_PERIOD - 1;
 	CLK_TIMER->CH0CV    = CLK_PERIOD/2;
-	CLK_TIMER->CCHP     = TIMER_CCHP_POEN; // primary output enable
-	CLK_TIMER->SWEVG    = TIMER_SWEVG_UPG; // generate an update event
-	CLK_TIMER->CTL0     = TIMER_CTL0_CEN;  // enable counter
+	CLK_TIMER->CH3CV    = CLK_PERIOD - 3;
+	CLK_TIMER->CCHP     = TIMER_CCHP_POEN;  // primary output enable
+	CLK_TIMER->SWEVG    = TIMER_SWEVG_CH3G; // generate a channel 3 capture or compare event
+	CLK_TIMER->CTL0     = TIMER_CTL0_CEN;   // enable counter
 
 	/* Run process */
-	LAT_TIMER->CTL0     = TIMER_CTL0_CEN;  // enable counter
+	LAT_TIMER->CTL0    |= TIMER_CTL0_CEN;  // enable counter
 }
 
 // Clear screen
