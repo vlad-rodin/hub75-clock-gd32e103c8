@@ -59,28 +59,38 @@ void gpio_deinit(uint32_t gpio_periph)
     switch(gpio_periph){
     case GPIOA:
         /* reset GPIOA */
-        rcu_periph_reset_enable(RCU_GPIOARST);
-        rcu_periph_reset_disable(RCU_GPIOARST);
+        // rcu_periph_reset_enable(RCU_GPIOARST);
+        // rcu_periph_reset_disable(RCU_GPIOARST);
+        RCU->APB2RST |=  RCU_APB2RST_PARST;
+        RCU->APB2RST &= ~RCU_APB2RST_PARST;
         break;
     case GPIOB:
         /* reset GPIOB */
-        rcu_periph_reset_enable(RCU_GPIOBRST);
-        rcu_periph_reset_disable(RCU_GPIOBRST);
+        // rcu_periph_reset_enable(RCU_GPIOBRST);
+        // rcu_periph_reset_disable(RCU_GPIOBRST);
+        RCU->APB2RST |=  RCU_APB2RST_PBRST;
+        RCU->APB2RST &= ~RCU_APB2RST_PBRST;
         break;
     case GPIOC:
         /* reset GPIOC */
-        rcu_periph_reset_enable(RCU_GPIOCRST);
-        rcu_periph_reset_disable(RCU_GPIOCRST);
+        // rcu_periph_reset_enable(RCU_GPIOCRST);
+        // rcu_periph_reset_disable(RCU_GPIOCRST);
+        RCU->APB2RST |=  RCU_APB2RST_PCRST;
+        RCU->APB2RST &= ~RCU_APB2RST_PCRST;
         break;
     case GPIOD:
         /* reset GPIOD */
-        rcu_periph_reset_enable(RCU_GPIODRST);
-        rcu_periph_reset_disable(RCU_GPIODRST);
+        // rcu_periph_reset_enable(RCU_GPIODRST);
+        // rcu_periph_reset_disable(RCU_GPIODRST);
+        RCU->APB2RST |=  RCU_APB2RST_PDRST;
+        RCU->APB2RST &= ~RCU_APB2RST_PDRST;
         break;
     case GPIOE:
         /* reset GPIOE */
-        rcu_periph_reset_enable(RCU_GPIOERST);
-        rcu_periph_reset_disable(RCU_GPIOERST);
+        // rcu_periph_reset_enable(RCU_GPIOERST);
+        // rcu_periph_reset_disable(RCU_GPIOERST);
+        RCU->APB2RST |=  RCU_APB2RST_PERST;
+        RCU->APB2RST &= ~RCU_APB2RST_PERST;
         break;
     default:
         break;
@@ -95,8 +105,10 @@ void gpio_deinit(uint32_t gpio_periph)
 */
 void gpio_afio_deinit(void)
 {
-    rcu_periph_reset_enable(RCU_AFRST);
-    rcu_periph_reset_disable(RCU_AFRST);
+    // rcu_periph_reset_enable(RCU_AFRST);
+    // rcu_periph_reset_disable(RCU_AFRST);
+    RCU->APB2RST |=  RCU_APB2RST_AFRST;
+    RCU->APB2RST &= ~RCU_APB2RST_AFRST;
 }
 
 /*!

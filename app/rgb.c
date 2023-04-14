@@ -59,11 +59,9 @@ void rgb_init()
 	gpio_compensation_config(GPIO_COMPENSATION_ENABLE);
 
 	/* Enable clocks */
-	rcu_periph_clock_enable(RCU_GPIOA);
-	rcu_periph_clock_enable(RCU_GPIOB);
-	rcu_periph_clock_enable(RCU_TIMER0);
-	rcu_periph_clock_enable(RCU_TIMER2);
-	rcu_periph_clock_enable(RCU_DMA0);
+	RCU->AHBEN  |= RCU_AHBEN_DMA0EN;
+	RCU->APB2EN |= RCU_APB2EN_TIMER0EN | RCU_APB2EN_PBEN | RCU_APB2EN_PAEN | RCU_APB2EN_AFEN;
+	RCU->APB1EN |= RCU_APB1EN_TIMER2EN;
 
 	/* Initialize data pins */
 	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_MAX,
