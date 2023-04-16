@@ -3,6 +3,10 @@
 static const double GAMMA = 2.2;
 static const uint32_t CLK_PERIOD = 8;
 
+#define BIT_PWR 8U
+#define ADR_PWR 3U
+#define ADR_MAX ((1U << ADR_PWR) - 1)
+
 static DMA_Channel_TypeDef *const DUR_DMA_CHANNEL = (&(DMA[0].CH[4]));
 static DMA_Channel_TypeDef *const DAT_DMA_CHANNEL = (&(DMA[0].CH[2]));
 static DMA_Channel_TypeDef *const ADR_DMA_CHANNEL = (&(DMA[0].CH[1]));
@@ -17,25 +21,15 @@ static const uint32_t LAT_RISE = (ENB_FALL + ENB_RISE)/2;
 static const uint32_t DIS_TIME = ENB_FALL - ENB_RISE;
 static const uint32_t ENB_TIME = CLK_PERIOD*(CLM_MAX + 3) - DIS_TIME;
 
-static uint16_t Duration[8];
-static uint8_t  Address[8];
+static uint16_t Duration[BIT_PWR];
+static uint8_t  Address[ADR_MAX + 1];
 static uint8_t  Correction[256];
-static uint8_t  Display[sizeof(Duration)/sizeof(Duration[0])][sizeof(Address)/sizeof(Address[0])][CLM_MAX + 1];
+static uint8_t  Display[BIT_PWR][ADR_MAX + 1][CLM_MAX + 1];
 
 // Initialization
 void rgb_init()
 {
 	rgb_free();
-
-	/* Test */
-	Display[0][0][0] = 0x3E;
-	Display[0][0][1] = 0x3D;
-	Display[0][0][2] = 0x3B;
-	Display[0][7][31] = 0x07;
-	for (uint_fast8_t i = 0; i < sizeof(Duration)/sizeof(Duration[0]); i++)
-	{
-		Display[i][2][15] = 0x07;
-	}
 
 	/* Fill the duration array */
 	for (uint_fast8_t i = 0; i < sizeof(Duration)/sizeof(Duration[0]); i++)
@@ -52,7 +46,7 @@ void rgb_init()
 	/* Fill the correction array */
 	for (uint_fast16_t i = 0; i < sizeof(Correction)/sizeof(Correction[0]); i++)
 	{
-		Correction[i] = round(255*pow((double)i/255, GAMMA));
+		Correction[i] = lround(255*pow((double)i/255, GAMMA));
 	}
 
 	/* Enable the I/O compensation cell */
@@ -184,4 +178,32 @@ void rgb_init()
 void rgb_free()
 {
 	memset(Display, 0x3F, sizeof(Display));
+}
+
+// Set pixel to color
+void rgb_set_pixel(uint_fast8_t Row, uint_fast8_t Column, uint32_t Color)
+{
+	if ((Row <= ROW_MAX) && (Column <= CLM_MAX))
+	{
+		uint_fast8_t R = (~(uint_fast8_t)Correction[((rgb_t)Color).R]) >> (8 - BIT_PWR);
+		uint_fast8_t G = (~(uint_fast8_t)Correction[((rgb_t)Color).G]) >> (8 - BIT_PWR);
+		uint_fast8_t B = (~(uint_fast8_t)Correction[((rgb_t)Color).B]) >> (8 - BIT_PWR);
+
+		const uint32_t SRAM_BB_BASE = 0x22000000U;
+		const uint32_t BASE = SRAM_BB_BASE + 12*(Row >> ADR_PWR);
+		uint32_t *p = (uint32_t *)(BASE + 32*(uint32_t)(&Display[0][Row & ADR_MAX][Column]));
+
+		for (uint_fast8_t i = 0; i < BIT_PWR; i++)
+		{
+			p[0] = R;
+			p[1] = G;
+			p[2] = B;
+
+			p += 8*sizeof(Display[0]);
+
+			R >>= 1;
+			G >>= 1;
+			B >>= 1;
+		}
+	}
 }
