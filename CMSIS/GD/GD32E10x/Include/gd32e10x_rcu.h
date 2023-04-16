@@ -172,6 +172,36 @@ typedef struct
 #define RCU_CFG0_PLLMF_4               (0x1UL << 29U)                        /*!< 0x20000000 */
 #define RCU_CFG0_PLLMF_Msk             (0x203C0000UL)                        /*!< 0x203C0000 */
 #define RCU_CFG0_PLLMF                 RCU_CFG0_PLLMF_Msk                    /*!< PLLMF[4:0] bits (The PLL clock multiplication factor) */
+#define RCU_CFG0_PLLMF2                ((0x0UL << 29U) | (0x0UL << 18U))     /*!< PLL source clock x 2 */
+#define RCU_CFG0_PLLMF3                ((0x0UL << 29U) | (0x1UL << 18U))     /*!< PLL source clock x 3 */
+#define RCU_CFG0_PLLMF4                ((0x0UL << 29U) | (0x2UL << 18U))     /*!< PLL source clock x 4 */
+#define RCU_CFG0_PLLMF5                ((0x0UL << 29U) | (0x3UL << 18U))     /*!< PLL source clock x 5 */
+#define RCU_CFG0_PLLMF6                ((0x0UL << 29U) | (0x4UL << 18U))     /*!< PLL source clock x 6 */
+#define RCU_CFG0_PLLMF7                ((0x0UL << 29U) | (0x5UL << 18U))     /*!< PLL source clock x 7 */
+#define RCU_CFG0_PLLMF8                ((0x0UL << 29U) | (0x6UL << 18U))     /*!< PLL source clock x 8 */
+#define RCU_CFG0_PLLMF9                ((0x0UL << 29U) | (0x7UL << 18U))     /*!< PLL source clock x 9 */
+#define RCU_CFG0_PLLMF10               ((0x0UL << 29U) | (0x8UL << 18U))     /*!< PLL source clock x 10 */
+#define RCU_CFG0_PLLMF11               ((0x0UL << 29U) | (0x9UL << 18U))     /*!< PLL source clock x 11 */
+#define RCU_CFG0_PLLMF12               ((0x0UL << 29U) | (0xAUL << 18U))     /*!< PLL source clock x 12 */
+#define RCU_CFG0_PLLMF13               ((0x0UL << 29U) | (0xBUL << 18U))     /*!< PLL source clock x 13 */
+#define RCU_CFG0_PLLMF14               ((0x0UL << 29U) | (0xCUL << 18U))     /*!< PLL source clock x 14 */
+#define RCU_CFG0_PLLMF6_5              ((0x0UL << 29U) | (0xDUL << 18U))     /*!< PLL source clock x 6.5 */
+#define RCU_CFG0_PLLMF16               ((0x0UL << 29U) | (0xEUL << 18U))     /*!< PLL source clock x 16 */
+#define RCU_CFG0_PLLMF17               ((0x1UL << 29U) | (0x0UL << 18U))     /*!< PLL source clock x 17 */
+#define RCU_CFG0_PLLMF18               ((0x1UL << 29U) | (0x1UL << 18U))     /*!< PLL source clock x 18 */
+#define RCU_CFG0_PLLMF19               ((0x1UL << 29U) | (0x2UL << 18U))     /*!< PLL source clock x 19 */
+#define RCU_CFG0_PLLMF20               ((0x1UL << 29U) | (0x3UL << 18U))     /*!< PLL source clock x 20 */
+#define RCU_CFG0_PLLMF21               ((0x1UL << 29U) | (0x4UL << 18U))     /*!< PLL source clock x 21 */
+#define RCU_CFG0_PLLMF22               ((0x1UL << 29U) | (0x5UL << 18U))     /*!< PLL source clock x 22 */
+#define RCU_CFG0_PLLMF23               ((0x1UL << 29U) | (0x6UL << 18U))     /*!< PLL source clock x 23 */
+#define RCU_CFG0_PLLMF24               ((0x1UL << 29U) | (0x7UL << 18U))     /*!< PLL source clock x 24 */
+#define RCU_CFG0_PLLMF25               ((0x1UL << 29U) | (0x8UL << 18U))     /*!< PLL source clock x 25 */
+#define RCU_CFG0_PLLMF26               ((0x1UL << 29U) | (0x9UL << 18U))     /*!< PLL source clock x 26 */
+#define RCU_CFG0_PLLMF27               ((0x1UL << 29U) | (0xAUL << 18U))     /*!< PLL source clock x 27 */
+#define RCU_CFG0_PLLMF28               ((0x1UL << 29U) | (0xBUL << 18U))     /*!< PLL source clock x 28 */
+#define RCU_CFG0_PLLMF29               ((0x1UL << 29U) | (0xCUL << 18U))     /*!< PLL source clock x 29 */
+#define RCU_CFG0_PLLMF30               ((0x1UL << 29U) | (0xDUL << 18U))     /*!< PLL source clock x 30 */
+#define RCU_CFG0_PLLMF31               ((0x1UL << 29U) | (0xEUL << 18U))     /*!< PLL source clock x 31 */
 
 #define RCU_CFG0_USBFSPSC_0            (0x1UL << 22U)                        /*!< 0x00400000 */
 #define RCU_CFG0_USBFSPSC_1            (0x2UL << 22U)                        /*!< 0x00800000 */

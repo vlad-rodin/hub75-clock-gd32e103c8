@@ -1,7 +1,7 @@
 #include "rgb.h"
 
 static const double GAMMA = 2.2;
-static const uint32_t CLK_PERIOD = 8;
+static const uint32_t CLK_PERIOD = 10;
 
 #define BIT_PWR 8U
 #define ADR_PWR 3U
