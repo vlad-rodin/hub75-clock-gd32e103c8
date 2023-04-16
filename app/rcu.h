@@ -22,7 +22,7 @@ static inline void rcu_init()
 		| RCU_CFG0_APB1PSC_DIV2           // CK_APB1 = CK_AHB / 2
 		;
 	RCU->CTL |= RCU_CTL_PLLEN;            // enable PLL
-	REG32((FMC_BASE) + 0x00000000U) = 3;  // 3 wait state added
+	FMC->WS  |= (3U << FMC_WS_WSCNT_Pos); // 3 wait state added
 
 	while (~RCU->CTL & RCU_CTL_PLLSTB);   // wait for PLL clock stabilization
 
