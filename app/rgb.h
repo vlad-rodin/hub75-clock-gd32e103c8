@@ -20,5 +20,7 @@ typedef union
 void rgb_init();
 void rgb_free();
 void rgb_set_pixel(uint_fast8_t Row, uint_fast8_t Column, uint32_t Color);
+bool rgb_isready();
+void rgb_flush();
 
 #endif // RGB_H_

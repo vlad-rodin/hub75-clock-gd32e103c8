@@ -24,7 +24,7 @@ static const uint32_t ENB_TIME = CLK_PERIOD*(CLM_MAX + 3) - DIS_TIME;
 static uint16_t Duration[BIT_PWR];
 static uint8_t  Address[ADR_MAX + 1];
 static uint8_t  Correction[256];
-static uint8_t  Display[BIT_PWR][ADR_MAX + 1][CLM_MAX + 1];
+static uint8_t  Display[2][BIT_PWR][ADR_MAX + 1][CLM_MAX + 1];
 
 // Initialization
 void rgb_init()
@@ -70,7 +70,7 @@ void rgb_init()
 	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_MAX, GPIO_PIN_6);
 
 	/* Initialize the data DMA */
-	DAT_DMA_CHANNEL->CNT   = sizeof(Display);
+	DAT_DMA_CHANNEL->CNT   = sizeof(Display[0]);
 	DAT_DMA_CHANNEL->PADDR = (uint32_t)&(GPIO_OCTL(GPIOA));
 	DAT_DMA_CHANNEL->MADDR = (uint32_t)Display;
 	DAT_DMA_CHANNEL->CTL   = 0
@@ -106,6 +106,8 @@ void rgb_init()
 		| (0x0UL << DMA_CHxCTL_FTFIE_Pos)  // disable channel full transfer finish interrupt
 		| DMA_CHxCTL_CHEN                  // enable channel
 		;
+	NVIC_SetPriority(DMA0_Channel1_IRQn, 3);
+	NVIC_EnableIRQ(DMA0_Channel1_IRQn);
 
 	/* Initialize the duration DMA */
 	DUR_DMA_CHANNEL->CNT   = sizeof(Duration)/sizeof(Duration[0]);
@@ -191,7 +193,7 @@ void rgb_set_pixel(uint_fast8_t Row, uint_fast8_t Column, uint32_t Color)
 
 		const uint32_t SRAM_BB_BASE = 0x22000000U;
 		const uint32_t BASE = SRAM_BB_BASE + 12*(Row >> ADR_PWR);
-		uint32_t *p = (uint32_t *)(BASE + 32*(uint32_t)(&Display[0][Row & ADR_MAX][Column]));
+		uint32_t *p = (uint32_t *)(BASE + 32*(uint32_t)(&Display[1][0][Row & ADR_MAX][Column]));
 
 		for (uint_fast8_t i = 0; i < BIT_PWR; i++)
 		{
@@ -199,11 +201,35 @@ void rgb_set_pixel(uint_fast8_t Row, uint_fast8_t Column, uint32_t Color)
 			p[1] = G;
 			p[2] = B;
 
-			p += 8*sizeof(Display[0]);
+			p += 8*sizeof(Display[1][0]);
 
 			R >>= 1;
 			G >>= 1;
 			B >>= 1;
 		}
 	}
+}
+
+bool rgb_isready()
+{
+	return ~ADR_DMA_CHANNEL->CTL & DMA_CHxCTL_FTFIE;
+}
+
+void rgb_flush()
+{
+	ADR_DMA_CHANNEL->CTL |= DMA_CHxCTL_FTFIE;
+}
+
+// Interrupt at the last address
+void DMA0_Channel1_IRQHandler()
+{
+	if (DMA0->INTF & DMA_INTC_FTFIFC4)
+	{
+		memcpy(&Display[0], &Display[1], sizeof(Display[0]));
+		GPIO_OCTL(GPIOA) = Display[0][0][0][0];
+		ADR_DMA_CHANNEL->CTL &= ~DMA_CHxCTL_FTFIE; // disable the last address interrupt
+		DMA0->INTC = DMA_INTC_FTFIFC4; // clear the last duration flag
+	}
+
+	DMA0->INTC = DMA_INTC_FTFIFC1; // clear the last address flag
 }
