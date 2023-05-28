@@ -19,6 +19,7 @@ OBJ_DIRS += $(patsubst %,%/,$(shell dirname ${OBJS} | sort -u))
 LINKER  := $(shell find -name "*.ld")
 LDFLAGS += -T${LINKER}
 LDFLAGS += -Wl,--gc-sections
+LDFLAGS += -Wl,--print-memory-usage
 
 ## Compiler
 CFLAGS += $(patsubst %,-I%,${HDR_DIRS})
@@ -63,11 +64,8 @@ all: ${BUILD_DIR}/main.elf
 
 ## Linking
 ${BUILD_DIR}/%.elf: ${OBJS} ${LINKER}
-	@echo -e "${STYLE_CMD} - Linking...${STYLE_ERR}"
+	@echo -e "${STYLE_CMD} - Linking...${STYLE_OFF}"
 	@${CC} ${CFLAGS} ${LDFLAGS} -o $@ ${OBJS}
-	@echo -en "${STYLE_OUT}"
-	@${SIZE} $@
-	@echo -en "${STYLE_OFF}"
 
 ## Compiling
 ${BUILD_DIR}/%.c.o: %.c Makefile ${HDRS} | ${OBJ_DIRS}
