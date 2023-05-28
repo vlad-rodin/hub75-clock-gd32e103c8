@@ -8,6 +8,7 @@
 #define CK_SYS   (CK_PLL)
 #define CK_AHB   (CK_SYS)
 #define CK_APB1  (CK_AHB/2)
+#define CK_APB2  (CK_AHB)
 
 static inline void rcu_init()
 {
