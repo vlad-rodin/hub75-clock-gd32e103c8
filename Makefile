@@ -7,6 +7,9 @@ SHELL := bash
 HDRS += $(patsubst ./%,%,$(shell find -name "*.h"))
 SRCS += $(patsubst ./%,%,$(shell find -name "*.c"))
 ASMS += $(patsubst ./%,%,$(shell find -name "*.s"))
+SCRS += $(patsubst ./%.m,%,$(shell find -name "*.m"))
+HDRS += $(patsubst %,${BUILD_DIR}/%.h,${SCRS})
+HDR_DIRS += $(patsubst %,%/,$(shell dirname ${HDRS} | sort -u))
 
 OBJS += $(patsubst %,${BUILD_DIR}/%.o,${SRCS})
 OBJS += $(patsubst %,${BUILD_DIR}/%.o,${ASMS})
@@ -18,7 +21,7 @@ LDFLAGS += -T${LINKER}
 LDFLAGS += -Wl,--gc-sections
 
 ## Compiler
-CFLAGS += $(patsubst %,-I%,$(shell dirname ${HDRS} | sort -u))
+CFLAGS += $(patsubst %,-I%,${HDR_DIRS})
 CFLAGS += -I.
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb
@@ -29,7 +32,6 @@ CFLAGS += -ggdb
 CFLAGS += -gdwarf-2
 CFLAGS += -g3
 CFLAGS += -O2
-# CFLAGS += -fshort-enums
 CFLAGS += -ffunction-sections
 CFLAGS += -fdata-sections
 CFLAGS += -flto
@@ -47,7 +49,7 @@ STYLE_OFF := "\\e[0m"
 
 ## Targets
 .PHONY: clean unlock write
-.PRECIOUS: ${BUILD_DIR}/%.c.o ${BUILD_DIR}/%.s.o %/
+.PRECIOUS: ${BUILD_DIR}/%.c.o ${BUILD_DIR}/%.s.o ${BUILD_DIR}/%.h %/
 .NOTPARALLEL: clean write
 
 ## Default
@@ -77,6 +79,12 @@ ${BUILD_DIR}/%.c.o: %.c Makefile ${HDRS} | ${OBJ_DIRS}
 ${BUILD_DIR}/%.s.o: %.s Makefile | ${OBJ_DIRS}
 	@echo -e "${STYLE_CMD} - Assembling $< into object file${STYLE_ERR}"
 	@${CC} -c ${CFLAGS} -o $@ $<
+	@echo -en "${STYLE_OFF}"
+
+## Running Octave scripts
+${BUILD_DIR}/%.h: %.m Makefile | ${HDR_DIRS}
+	@echo -e "${STYLE_CMD} - Generating $@${STYLE_ERR}"
+	@./$< $@
 	@echo -en "${STYLE_OFF}"
 
 ## Directory
