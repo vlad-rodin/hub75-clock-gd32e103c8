@@ -12,5 +12,5 @@ void rnd_init()
 
 uint32_t rnd_color()
 {
-	return PALETTE[RND_TIMER->CNT];
+	return *((uint32_t *)PALETTE[RND_TIMER->CNT]) & 0xFFFFFF;
 }
