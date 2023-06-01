@@ -50,28 +50,54 @@ void rgb_init()
 	}
 
 	/* Enable the I/O compensation cell */
-	gpio_compensation_config(GPIO_COMPENSATION_ENABLE);
+	AFIO->CPSCTL |= AFIO_CPSCTL_CPS_EN;
+	for (uint_fast8_t x = 0; x <= 4; x++)
+	{
+		GPIO[x].SPD = 0xFFFF;
+	}
 
 	/* Enable clocks */
 	RCU->AHBEN  |= RCU_AHBEN_DMA0EN;
 	RCU->APB2EN |= RCU_APB2EN_TIMER0EN | RCU_APB2EN_PBEN | RCU_APB2EN_PAEN | RCU_APB2EN_AFEN;
 	RCU->APB1EN |= RCU_APB1EN_TIMER2EN;
 
-	/* Initialize data pins */
-	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_MAX,
-		GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5);
-	/* Initialize address pins */
-	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_MAX, GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10);
-	/* Initialize the enable pin as TIMER0_CH1_ON */
-	gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_MAX, GPIO_PIN_14);
-	/* Initialize the latch pin as TIMER0_CH2_ON */
-	gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_MAX, GPIO_PIN_15);
-	/* Initialize the clock pin as TIMER2_CH0 */
-	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_MAX, GPIO_PIN_6);
+	/* Initialize pins */
+	GPIOA->CTL0 = 0
+		| GPIO_CTL0_CTL6_1 | GPIO_CTL0_MD6 // Clock (TIMER2_CH0)
+		| 0                | GPIO_CTL0_MD5 // Data[5] -> G1
+		| 0                | GPIO_CTL0_MD4 // Data[4] -> B1
+		| 0                | GPIO_CTL0_MD3 // Data[3] -> R1
+		| 0                | GPIO_CTL0_MD2 // Data[2] -> B0
+		| 0                | GPIO_CTL0_MD1 // Data[1] -> G0
+		| 0                | GPIO_CTL0_MD0 // Data[0] -> R0
+		| (GPIOA->CTL0 & ~(0
+			| GPIO_CTL0_CTL6 | GPIO_CTL0_MD6
+			| GPIO_CTL0_CTL5 | GPIO_CTL0_MD5
+			| GPIO_CTL0_CTL4 | GPIO_CTL0_MD4
+			| GPIO_CTL0_CTL3 | GPIO_CTL0_MD3
+			| GPIO_CTL0_CTL2 | GPIO_CTL0_MD2
+			| GPIO_CTL0_CTL1 | GPIO_CTL0_MD1
+			| GPIO_CTL0_CTL0 | GPIO_CTL0_MD0
+			))
+		;
+	GPIOB->CTL1 = 0
+		| GPIO_CTL1_CTL15_1 | GPIO_CTL1_MD15 // Enable (TIMER0_CH1_ON)
+		| GPIO_CTL1_CTL14_1 | GPIO_CTL1_MD14 // Latch (TIMER0_CH2_ON)
+		| 0                 | GPIO_CTL1_MD10 // Address[2]
+		| 0                 | GPIO_CTL1_MD9  // Address[1]
+		| 0                 | GPIO_CTL1_MD8  // Address[0]
+		| (GPIOB->CTL1 & ~(0
+			| GPIO_CTL1_CTL15 | GPIO_CTL1_MD15
+			| GPIO_CTL1_CTL14 | GPIO_CTL1_MD14
+			| GPIO_CTL1_CTL10 | GPIO_CTL1_MD10
+			| GPIO_CTL1_CTL9  | GPIO_CTL1_MD9
+			| GPIO_CTL1_CTL8  | GPIO_CTL1_MD8
+			))
+		;
 
 	/* Initialize the data DMA */
 	DAT_DMA_CHANNEL->CNT   = sizeof(Display[0]);
-	DAT_DMA_CHANNEL->PADDR = (uint32_t)&(GPIO_OCTL(GPIOA));
+	DAT_DMA_CHANNEL->PADDR = (uint32_t)&(GPIOA->OCTL);
 	DAT_DMA_CHANNEL->MADDR = (uint32_t)Display;
 	DAT_DMA_CHANNEL->CTL   = 0
 		| (0x0UL << DMA_CHxCTL_M2M_Pos)    // disable memory to memory mode
@@ -90,7 +116,7 @@ void rgb_init()
 
 	/* Initialize the address DMA */
 	ADR_DMA_CHANNEL->CNT   = sizeof(Address)/sizeof(Address[0]);
-	ADR_DMA_CHANNEL->PADDR = (uint32_t)&(GPIO_OCTL(GPIOB)) + 2UL;
+	ADR_DMA_CHANNEL->PADDR = (uint32_t)&(GPIOB->OCTL) + 2UL;
 	ADR_DMA_CHANNEL->MADDR = (uint32_t)Address;
 	ADR_DMA_CHANNEL->CTL   = 0
 		| (0x0UL << DMA_CHxCTL_M2M_Pos)    // disable memory to memory mode
@@ -226,7 +252,8 @@ void DMA0_Channel1_IRQHandler()
 	if (DMA0->INTF & DMA_INTC_FTFIFC4)
 	{
 		memcpy(&Display[0], &Display[1], sizeof(Display[0]));
-		GPIO_OCTL(GPIOA) = Display[0][0][0][0];
+		GPIOA->BC  = 0x3F;
+		GPIOA->BOP = Display[0][0][0][0];
 		ADR_DMA_CHANNEL->CTL &= ~DMA_CHxCTL_FTFIE; // disable the last address interrupt
 		DMA0->INTC = DMA_INTC_FTFIFC4; // clear the last duration flag
 	}
