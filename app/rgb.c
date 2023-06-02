@@ -243,7 +243,8 @@ bool rgb_isready()
 
 void rgb_flush()
 {
-	ADR_DMA_CHANNEL->CTL |= DMA_CHxCTL_FTFIE;
+	DMA0->INTC = DMA_INTC_FTFIFC4 | DMA_INTC_FTFIFC1; // clear interrupt flags
+	ADR_DMA_CHANNEL->CTL |= DMA_CHxCTL_FTFIE; // enable the last address interrupt
 }
 
 // Interrupt at the last address
@@ -252,8 +253,7 @@ void DMA0_Channel1_IRQHandler()
 	if (DMA0->INTF & DMA_INTC_FTFIFC4)
 	{
 		memcpy(&Display[0], &Display[1], sizeof(Display[0]));
-		GPIOA->BC  = 0x3F;
-		GPIOA->BOP = Display[0][0][0][0];
+		*((uint8_t *)&(GPIOA->OCTL)) = Display[0][0][0][0];
 		ADR_DMA_CHANNEL->CTL &= ~DMA_CHxCTL_FTFIE; // disable the last address interrupt
 		DMA0->INTC = DMA_INTC_FTFIFC4; // clear the last duration flag
 	}
