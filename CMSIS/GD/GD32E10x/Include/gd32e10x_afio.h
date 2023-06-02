@@ -4,14 +4,15 @@
 /* AFIO struct */
 typedef struct
 {
-  __IO uint32_t EC;      /*!< AFIO event control register,                 Address offset: 0x00 */
-  __IO uint32_t PCF0;    /*!< AFIO port configuration register 0,          Address offset: 0x04 */
-  __IO uint32_t EXTISS0; /*!< AFIO port EXTI sources selection register 0, Address offset: 0x08 */
-  __IO uint32_t EXTISS1; /*!< AFIO port EXTI sources selection register 1, Address offset: 0x0C */
-  __IO uint32_t EXTISS2; /*!< AFIO port EXTI sources selection register 2, Address offset: 0x10 */
-  __IO uint32_t EXTISS3; /*!< AFIO port EXTI sources selection register 3, Address offset: 0x14 */
-  __IO uint32_t PCF1;    /*!< AFIO port configuration register 1,          Address offset: 0x18 */
-  __IO uint32_t CPSCTL;  /*!< IO compensation control register,            Address offset: 0x3C */
+  __IO uint32_t EC;       /*!< AFIO event control register,                 Address offset: 0x00 */
+  __IO uint32_t PCF0;     /*!< AFIO port configuration register 0,          Address offset: 0x04 */
+  __IO uint32_t EXTISS0;  /*!< AFIO port EXTI sources selection register 0, Address offset: 0x08 */
+  __IO uint32_t EXTISS1;  /*!< AFIO port EXTI sources selection register 1, Address offset: 0x0C */
+  __IO uint32_t EXTISS2;  /*!< AFIO port EXTI sources selection register 2, Address offset: 0x10 */
+  __IO uint32_t EXTISS3;  /*!< AFIO port EXTI sources selection register 3, Address offset: 0x14 */
+       uint32_t RESERVED; /*!< Reserved */
+  __IO uint32_t PCF1;     /*!< AFIO port configuration register 1,          Address offset: 0x1C */
+  __IO uint32_t CPSCTL;   /*!< IO compensation control register,            Address offset: 0x20 */
 } AFIO_TypeDef;
 
 /* AFIO definitions */

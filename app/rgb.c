@@ -50,7 +50,7 @@ void rgb_init()
 	}
 
 	/* Enable the I/O compensation cell */
-	AFIO->CPSCTL |= AFIO_CPSCTL_CPS_EN;
+	AFIO->CPSCTL = AFIO_CPSCTL_CPS_EN;
 	for (uint_fast8_t x = 0; x <= 4; x++)
 	{
 		GPIO[x].SPD = 0xFFFF;
