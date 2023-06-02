@@ -1,6 +1,6 @@
 #include "rgb.h"
 
-static const double GAMMA = 2.2;
+static const float GAMMA = 2.2;
 static const uint32_t CLK_PERIOD = 10;
 
 #define BIT_PWR 8U
@@ -46,7 +46,7 @@ void rgb_init()
 	/* Fill the correction array */
 	for (uint_fast16_t i = 0; i < sizeof(Correction)/sizeof(Correction[0]); i++)
 	{
-		Correction[i] = lround(255*pow((double)i/255, GAMMA));
+		Correction[i] = lroundf(255*powf((float)i/255, GAMMA));
 	}
 
 	/* Enable the I/O compensation cell */

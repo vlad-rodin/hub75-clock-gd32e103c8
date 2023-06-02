@@ -26,7 +26,7 @@ CFLAGS += $(patsubst %,-I%,${HDR_DIRS})
 CFLAGS += -I.
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb
-CFLAGS += -mfloat-abi=soft
+CFLAGS += -mfloat-abi=hard
 CFLAGS += -Wall
 CFLAGS += -g
 CFLAGS += -ggdb
