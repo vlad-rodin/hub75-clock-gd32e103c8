@@ -212,9 +212,9 @@ void rgb_set_pixel(uint_fast8_t Row, uint_fast8_t Column, uint32_t Color)
 		uint_fast8_t G = Correction[(Color >>  8) & 0xFF];
 		uint_fast8_t B = Correction[(Color >>  0) & 0xFF];
 
-		const uint32_t SRAM_BB_BASE = 0x22000000U;
-		const uint32_t BASE = SRAM_BB_BASE + 12*(Row >> ADR_PWR);
-		uint32_t *p = (uint32_t *)(BASE + 32*(uint32_t)(&Display[1][0][Row & ADR_MAX][Column]));
+		void *const Address = &Display[1][0][Row & ADR_MAX][Column];
+		const uint32_t BitNumber = 3*(Row >> ADR_PWR);
+		uint32_t *p = bit_banding_SRAM(Address, BitNumber);
 
 		for (uint_fast8_t i = 0; i < CHN_PWR; i++)
 		{
@@ -239,7 +239,7 @@ bool rgb_isready()
 void rgb_flush()
 {
 	DMA0->INTC = DMA_INTC_FTFIFC4 | DMA_INTC_FTFIFC1; // clear interrupt flags
-	ADR_DMA_CHANNEL->CTL |= DMA_CHxCTL_FTFIE; // enable the last address interrupt
+	set_bit(&ADR_DMA_CHANNEL->CTL, DMA_CHxCTL_FTFIE_Pos); // enable the last address interrupt
 }
 
 // Interrupt at the last address
@@ -249,7 +249,7 @@ void DMA0_Channel1_IRQHandler()
 	{
 		memcpy(&Display[0], &Display[1], sizeof(Display[0]));
 		*((uint8_t *)&(GPIOA->OCTL)) = Display[0][0][0][0];
-		ADR_DMA_CHANNEL->CTL &= ~DMA_CHxCTL_FTFIE; // disable the last address interrupt
+		clr_bit(&ADR_DMA_CHANNEL->CTL, DMA_CHxCTL_FTFIE_Pos); // disable the last address interrupt
 	}
 
 	DMA0->INTC = DMA_INTC_FTFIFC4 | DMA_INTC_FTFIFC1; // clear interrupt flags

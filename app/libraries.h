@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "bit-banding.h"
 #include "gd32e10x.h"
 #include "gd32e10x_afio.h"
 #include "gd32e10x_dma.h"
