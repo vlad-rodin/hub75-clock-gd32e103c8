@@ -66,10 +66,10 @@ void idx_main()
 			memcpy(SamplePoints[0], SamplePoints[1], sizeof(SamplePoints[0]));
 			for (uint_fast8_t i = 0; i < IDX_MAX; i++)
 			{
-				rgb_t Color = { .U = rnd_color() };
-				SamplePoints[1][i].R = Color.R;
-				SamplePoints[1][i].G = Color.G;
-				SamplePoints[1][i].B = Color.B;
+				const uint32_t Color = rnd_color();
+				SamplePoints[1][i].R = Color >> 16;
+				SamplePoints[1][i].G = Color >>  8;
+				SamplePoints[1][i].B = Color >>  0;
 			}
 		}
 
@@ -78,13 +78,14 @@ void idx_main()
 		_index2color[0] = 0;
 		for (uint_fast8_t i = 0; i < IDX_MAX; i++)
 		{
-			rgb_t Color =
-			{
-				.R = (t1*SamplePoints[0][i].R + t0*SamplePoints[1][i].R)/(PERIOD - 1),
-				.G = (t1*SamplePoints[0][i].G + t0*SamplePoints[1][i].G)/(PERIOD - 1),
-				.B = (t1*SamplePoints[0][i].B + t0*SamplePoints[1][i].B)/(PERIOD - 1),
-			};
-			_index2color[i + 1] = Color.U;
+			_index2color[i + 1]
+				= ((uint8_t)((t1*SamplePoints[0][i].R + t0*SamplePoints[1][i].R)
+					/ (PERIOD - 1)) << 16)
+				| ((uint8_t)((t1*SamplePoints[0][i].G + t0*SamplePoints[1][i].G)
+					/ (PERIOD - 1)) <<  8)
+				| ((uint8_t)((t1*SamplePoints[0][i].B + t0*SamplePoints[1][i].B)
+					/ (PERIOD - 1)) <<  0)
+				;
 		}
 
 		for (uint_fast8_t Row = 0; Row < ROW_SIZE; Row++)
