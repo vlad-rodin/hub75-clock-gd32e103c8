@@ -13,6 +13,25 @@ void SystemInit()
 			| (3UL << 11*2) // set CP11 Full Access
 			;
 	#endif
+
+	/* Enable all GPIO and AFIO clocks */
+	RCU->APB2EN |= 0
+		| RCU_APB2EN_PEEN
+		| RCU_APB2EN_PDEN
+		| RCU_APB2EN_PCEN
+		| RCU_APB2EN_PBEN
+		| RCU_APB2EN_PAEN
+		| RCU_APB2EN_AFEN
+		;
+
+	/* Enable the I/O compensation cell */
+	AFIO->CPSCTL = AFIO_CPSCTL_CPS_EN;
+
+	/* Set very high output speed when MDx is 0b11 */
+	for (uint_fast8_t x = 0; x <= 4; x++)
+	{
+		GPIO[x].SPD = 0xFFFF;
+	}
 }
 
 int main(void)

@@ -50,16 +50,9 @@ void rgb_init()
 		Correction[i] = ~lroundf(CHN_MAX*powf((float)i/CHN_MAX, GAMMA));
 	}
 
-	/* Enable the I/O compensation cell */
-	AFIO->CPSCTL = AFIO_CPSCTL_CPS_EN;
-	for (uint_fast8_t x = 0; x <= 4; x++)
-	{
-		GPIO[x].SPD = 0xFFFF;
-	}
-
 	/* Enable clocks */
 	RCU->AHBEN  |= RCU_AHBEN_DMA0EN;
-	RCU->APB2EN |= RCU_APB2EN_TIMER0EN | RCU_APB2EN_PBEN | RCU_APB2EN_PAEN | RCU_APB2EN_AFEN;
+	RCU->APB2EN |= RCU_APB2EN_TIMER0EN | RCU_APB2EN_PBEN | RCU_APB2EN_PAEN;
 	RCU->APB1EN |= RCU_APB1EN_TIMER2EN;
 
 	/* Initialize pins */
