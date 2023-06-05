@@ -330,19 +330,19 @@ typedef struct
 #define RCU_APB2RST_SPI0RST_Msk        (0x1UL << RCU_APB2RST_SPI0RST_Pos)    /*!< 0x00001000 */
 #define RCU_APB2RST_SPI0RST            RCU_APB2RST_SPI0RST_Msk               /*!< SPI0 reset */
 #define RCU_APB2RST_TIMER7RST_Pos      (13U)
-#define RCU_APB2RST_TIMER7RST_Msk      (0x1UL << RCU_APB2RST_TIMER7RST_Pos)  /*!< 0x00000800 */
+#define RCU_APB2RST_TIMER7RST_Msk      (0x1UL << RCU_APB2RST_TIMER7RST_Pos)  /*!< 0x00002000 */
 #define RCU_APB2RST_TIMER7RST          RCU_APB2RST_TIMER7RST_Msk             /*!< TIMER7 reset */
 #define RCU_APB2RST_USART0RST_Pos      (14U)
 #define RCU_APB2RST_USART0RST_Msk      (0x1UL << RCU_APB2RST_USART0RST_Pos)  /*!< 0x00004000 */
 #define RCU_APB2RST_USART0RST          RCU_APB2RST_USART0RST_Msk             /*!< USART0 reset */
 #define RCU_APB2RST_TIMER8RST_Pos      (19U)
-#define RCU_APB2RST_TIMER8RST_Msk      (0x1UL << RCU_APB2RST_TIMER8RST_Pos)  /*!< 0x00000800 */
+#define RCU_APB2RST_TIMER8RST_Msk      (0x1UL << RCU_APB2RST_TIMER8RST_Pos)  /*!< 0x00080000 */
 #define RCU_APB2RST_TIMER8RST          RCU_APB2RST_TIMER8RST_Msk             /*!< TIMER8 reset */
 #define RCU_APB2RST_TIMER9RST_Pos      (20U)
-#define RCU_APB2RST_TIMER9RST_Msk      (0x1UL << RCU_APB2RST_TIMER9RST_Pos)  /*!< 0x00000800 */
+#define RCU_APB2RST_TIMER9RST_Msk      (0x1UL << RCU_APB2RST_TIMER9RST_Pos)  /*!< 0x00100000 */
 #define RCU_APB2RST_TIMER9RST          RCU_APB2RST_TIMER9RST_Msk             /*!< TIMER9 reset */
 #define RCU_APB2RST_TIMER10RST_Pos     (21U)
-#define RCU_APB2RST_TIMER10RST_Msk     (0x1UL << RCU_APB2RST_TIMER10RST_Pos) /*!< 0x00000800 */
+#define RCU_APB2RST_TIMER10RST_Msk     (0x1UL << RCU_APB2RST_TIMER10RST_Pos) /*!< 0x00200000 */
 #define RCU_APB2RST_TIMER10RST         RCU_APB2RST_TIMER10RST_Msk            /*!< TIMER10 reset */
 
 /* RCU_APB1RST */
@@ -465,19 +465,19 @@ typedef struct
 #define RCU_APB2EN_SPI0EN_Msk          (0x1UL << RCU_APB2EN_SPI0EN_Pos)      /*!< 0x00001000 */
 #define RCU_APB2EN_SPI0EN              RCU_APB2EN_SPI0EN_Msk                 /*!< SPI0 enable */
 #define RCU_APB2EN_TIMER7EN_Pos        (13U)
-#define RCU_APB2EN_TIMER7EN_Msk        (0x1UL << RCU_APB2EN_TIMER7EN_Pos)    /*!< 0x00000800 */
+#define RCU_APB2EN_TIMER7EN_Msk        (0x1UL << RCU_APB2EN_TIMER7EN_Pos)    /*!< 0x00002000 */
 #define RCU_APB2EN_TIMER7EN            RCU_APB2EN_TIMER7EN_Msk               /*!< TIMER7 enable */
 #define RCU_APB2EN_USART0EN_Pos        (14U)
 #define RCU_APB2EN_USART0EN_Msk        (0x1UL << RCU_APB2EN_USART0EN_Pos)    /*!< 0x00004000 */
 #define RCU_APB2EN_USART0EN            RCU_APB2EN_USART0EN_Msk               /*!< USART0 enable */
 #define RCU_APB2EN_TIMER8EN_Pos        (19U)
-#define RCU_APB2EN_TIMER8EN_Msk        (0x1UL << RCU_APB2EN_TIMER8EN_Pos)    /*!< 0x00000800 */
+#define RCU_APB2EN_TIMER8EN_Msk        (0x1UL << RCU_APB2EN_TIMER8EN_Pos)    /*!< 0x00080000 */
 #define RCU_APB2EN_TIMER8EN            RCU_APB2EN_TIMER8EN_Msk               /*!< TIMER8 enable */
 #define RCU_APB2EN_TIMER9EN_Pos        (20U)
-#define RCU_APB2EN_TIMER9EN_Msk        (0x1UL << RCU_APB2EN_TIMER9EN_Pos)    /*!< 0x00000800 */
+#define RCU_APB2EN_TIMER9EN_Msk        (0x1UL << RCU_APB2EN_TIMER9EN_Pos)    /*!< 0x00100000 */
 #define RCU_APB2EN_TIMER9EN            RCU_APB2EN_TIMER9EN_Msk               /*!< TIMER9 enable */
 #define RCU_APB2EN_TIMER10EN_Pos       (21U)
-#define RCU_APB2EN_TIMER10EN_Msk       (0x1UL << RCU_APB2EN_TIMER10EN_Pos)   /*!< 0x00000800 */
+#define RCU_APB2EN_TIMER10EN_Msk       (0x1UL << RCU_APB2EN_TIMER10EN_Pos)   /*!< 0x00200000 */
 #define RCU_APB2EN_TIMER10EN           RCU_APB2EN_TIMER10EN_Msk              /*!< TIMER10 enable */
 
 /* RCU_APB1EN */
