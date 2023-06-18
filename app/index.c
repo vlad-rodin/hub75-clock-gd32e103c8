@@ -41,7 +41,8 @@ static const uint8_t _position2index[16][32] =
 #define ROW_SIZE (sizeof(_position2index)/sizeof(_position2index[0]))
 #define CLM_SIZE (sizeof(_position2index[0])/sizeof(_position2index[0][0]))
 
-static uint8_t Buffer[ROW_SIZE][CLM_SIZE];
+static uint8_t Buffer[2][ROW_SIZE][CLM_SIZE];
+static volatile bool isFlush;
 
 void idx_main()
 {
@@ -55,6 +56,12 @@ void idx_main()
 
 	if (rgb_isready())
 	{
+		if (isFlush)
+		{
+			memcpy(Buffer[0], Buffer[1], sizeof(Buffer[1]));
+			isFlush = false;
+		}
+
 		if (t1)
 		{
 			t1--;
@@ -92,7 +99,7 @@ void idx_main()
 		{
 			for (uint_fast8_t Column = 0; Column < CLM_SIZE; Column++)
 			{
-				rgb_set_pixel(Row, Column, _index2color[Buffer[Row][Column]]);
+				rgb_set_pixel(Row, Column, _index2color[Buffer[0][Row][Column]]);
 			}
 		}
 
@@ -104,6 +111,16 @@ void idx_set_pixel(uint_fast8_t Row, uint_fast8_t Column, bool isOn)
 {
 	if ((Row < ROW_SIZE) && (Column < CLM_SIZE))
 	{
-		Buffer[Row][Column] = isOn ? _position2index[Row][Column] : 0;
+		Buffer[1][Row][Column] = isOn ? _position2index[Row][Column] : 0;
 	}
+}
+
+bool idx_isready()
+{
+	return !isFlush;
+}
+
+void idx_flush()
+{
+	isFlush = true;
 }
