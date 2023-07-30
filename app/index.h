@@ -7,5 +7,6 @@ void idx_main();
 void idx_set_pixel(uint_fast8_t Row, uint_fast8_t Column, bool isOn);
 bool idx_isready();
 void idx_flush();
+void idx_clear();
 
 #endif // INDEX_H_

@@ -25,7 +25,7 @@ static const uint8_t _position2index[16][32] =
 	[0x2] = {UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP},
 	[0x3] = {UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP},
 	[0x4] = {UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP,UP},
-	[0x6] = {__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__},
+	[0x5] = {__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__},
 	[0x6] = {__,a0,a0,a1,a1,a2,a2,__,b0,b0,b1,b1,b2,b2,__,__,__,__,c0,c0,c1,c1,c2,c2,__,d0,d0,d1,d1,d2,d2,__},
 	[0x7] = {__,a0,a0,a1,a1,a2,a2,__,b0,b0,b1,b1,b2,b2,__,__,__,__,c0,c0,c1,c1,c2,c2,__,d0,d0,d1,d1,d2,d2,__},
 	[0x8] = {__,aB,aB,__,__,a3,a3,__,bB,bB,__,__,b3,b3,__,e0,e0,__,cB,cB,__,__,c3,c3,__,dB,dB,__,__,d3,d3,__},
@@ -123,4 +123,9 @@ bool idx_isready()
 void idx_flush()
 {
 	isFlush = true;
+}
+
+void idx_clear()
+{
+	memset(Buffer[1], 0, sizeof(Buffer[1]));
 }
