@@ -19,6 +19,8 @@ LINKER  := $(shell find -name "*.ld")
 LDFLAGS += -T${LINKER}
 LDFLAGS += -Wl,--gc-sections
 LDFLAGS += -Wl,--print-memory-usage
+LDFLAGS += --specs=nosys.specs
+LDFLAGS += --specs=nano.specs
 
 ## Compiler
 CFLAGS += $(patsubst %,-I%,${HDR_DIRS})
@@ -27,6 +29,8 @@ CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb
 CFLAGS += -mfloat-abi=hard
 CFLAGS += -Wall
+CFLAGS += -Wextra
+CFLAGS += -pedantic
 CFLAGS += -g
 CFLAGS += -ggdb
 CFLAGS += -gdwarf-2
